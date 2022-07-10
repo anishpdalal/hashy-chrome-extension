@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import sanitizeHtml from 'sanitize-html';
+import { Link } from 'react-chrome-extension-router';
+import Integration from '../Integration/Integration';
 import './Popup.css';
 
 async function getGoogleAuthLink() {
@@ -89,6 +91,11 @@ const Popup = () => {
           target="_blank">
           Login with Google
         </a>
+      }
+      {loggedIn &&
+        <div className="integration">
+          <Link component={Integration}>Integrations</Link>
+        </div>
       }
       {loggedIn &&
         <div>
