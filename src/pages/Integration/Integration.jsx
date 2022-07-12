@@ -1,11 +1,12 @@
 import React from 'react';
 import { goBack, Link } from 'react-chrome-extension-router';
+import secrets from 'secrets';
 
 const Zendesk = () => {
   const [link, setLink] = React.useState("");
 
   async function getZendeskLink(link) {
-    const response = await fetch(`${process.env.API_HOST}/v0/auth/zendesk`,
+    const response = await fetch(`${secrets.apiHost}/v0/auth/zendesk`,
       {
         credentials: "include",
         method: "POST",

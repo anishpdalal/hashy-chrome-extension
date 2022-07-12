@@ -2,16 +2,17 @@ import React, { useState, useEffect } from 'react';
 import sanitizeHtml from 'sanitize-html';
 import { Link } from 'react-chrome-extension-router';
 import Integration from '../Integration/Integration';
+import secrets from 'secrets';
 import './Popup.css';
 
 async function getGoogleAuthLink() {
-  const response = await fetch(`${process.env.API_HOST}/v0/auth/cookie/google/authorize`);
+  const response = await fetch(`${secrets.apiHost}/v0/auth/cookie/google/authorize`);
   const responseJson = await response.json();
   return responseJson.authorization_url;
 }
 
 async function isUserLoggedIn() {
-  const response = await fetch(`${process.env.API_HOST}/v0/users/me`, { credentials: 'include' })
+  const response = await fetch(`${secrets.apiHost}/v0/users/me`, { credentials: 'include' })
   if (response.status !== 200) {
     return false;
   }
@@ -20,7 +21,7 @@ async function isUserLoggedIn() {
 }
 
 async function getSearchResults(query) {
-  const response = await fetch(`${process.env.API_HOST}/v0/search?query=${query}`, { credentials: 'include' })
+  const response = await fetch(`${secrets.apiHost}/v0/search?query=${query}`, { credentials: 'include' })
   const responseJson = await response.json();
   return responseJson;
 }
