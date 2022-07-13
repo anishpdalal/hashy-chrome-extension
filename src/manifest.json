@@ -13,7 +13,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://*/*"
+        "https://*.zendesk.com/agent/tickets/*"
       ],
       "js": [
         "contentScript.bundle.js"
@@ -24,10 +24,7 @@
     }
   ],
   "host_permissions": [
-    "https://api.nlp-labs.com/*"
-  ],
-  "permissions": [
-    "activeTab"
+    "https://api.nlp-labs.com/"
   ],
   "web_accessible_resources": [
     {
