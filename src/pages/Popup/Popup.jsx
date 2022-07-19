@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import sanitizeHtml from 'sanitize-html';
 import { Link } from 'react-chrome-extension-router';
 import Integration from '../Integration/Integration';
+import Analytics from '../Analytics/Analytics';
 import secrets from 'secrets';
 import './Popup.css';
 
@@ -20,16 +21,35 @@ async function isUserLoggedIn() {
   return responseJson.is_active;
 }
 
-async function getSearchResults(query) {
-  const response = await fetch(`${secrets.apiHost}/v0/search?query=${query}`, { credentials: 'include' })
+async function getSearchResults(query, doc_type = null) {
+  let queryStr;
+  if (doc_type && doc_type !== "all") {
+    queryStr = `query=${query}&doc_type=${doc_type}`
+  } else {
+    queryStr = `query=${query}`
+  }
+  const response = await fetch(`${secrets.apiHost}/v0/search?${queryStr}`, { credentials: 'include' })
   const responseJson = await response.json();
   return responseJson;
 }
 
 const Popup = () => {
 
+  const docTypeOptions = [
+    { label: "All", value: "all" },
+    { label: "Help Center Article", value: "zendesk_hc_article_body" },
+    { label: "Ticket", value: "zendesk_ticket" },
+    { label: "Ticket Comment", value: "zendesk_ticket_comment" },
+  ];
+
   const [googleAuthLink, setGoogleAuthLink] = useState("");
-  const [loggedIn, setLoggedIn] = useState(false)
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [query, setQuery] = useState("");
+  const [queryId, setQueryId] = useState(null);
+  const [results, setResults] = useState([]);
+  const [answer, setAnswer] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [docType, setDocType] = useState("all");
   const [title, setTitle] = useState("");
   useEffect(() => {
     if (title) {
@@ -39,23 +59,21 @@ const Popup = () => {
           setLoading(false);
           setResults(response.results);
           setAnswer(response.answer);
+          setQueryId(response.query_id);
         })
     }
   }, [title]);
 
-  const [query, setQuery] = useState("")
-  const [results, setResults] = useState([]);
-  const [answer, setAnswer] = useState(null);
-  const [loading, setLoading] = useState(false)
 
   const handleSubmit = event => {
     event.preventDefault();
     setLoading(true);
-    getSearchResults(query)
+    getSearchResults(query, docType)
       .then(response => {
         setLoading(false);
         setResults(response.results);
         setAnswer(response.answer);
+        setQueryId(response.query_id);
       })
   };
 
@@ -84,6 +102,21 @@ const Popup = () => {
 
   }, []);
 
+  const handleAnchorClick = event => {
+    event.preventDefault();
+    chrome.tabs.create({ url: event.currentTarget.href, active: false });
+    fetch(`${secrets.apiHost}/v0/log`,
+      {
+        credentials: "include",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ query_id: queryId, event_type: "SEARCH_RESULT_CLICK", message: event.currentTarget.href })
+      }
+    );
+  };
+
   return (
     <div className="App">
       <h1>Hashy</h1>
@@ -99,7 +132,12 @@ const Popup = () => {
         </div>
       }
       {loggedIn &&
-        <div>
+        <div className="analytics">
+          <Link component={Analytics}>Analytics</Link>
+        </div>
+      }
+      {loggedIn &&
+        <div style={{ marginTop: "10px" }}>
           <form onSubmit={handleSubmit}>
             <input
               type="text"
@@ -107,6 +145,17 @@ const Popup = () => {
               placeholder="Search"
               style={{ width: '75%' }}
               onChange={event => setQuery(event.target.value)} />
+            <button style={{ marginLeft: "5px" }} type="submit">Submit</button>
+            <div style={{ marginTop: "10px" }}>
+              <label>
+                Filter Document Type:
+                <select style={{ marginLeft: "5px" }} value={docType} onChange={(event) => setDocType(event.target.value)}>
+                  {docTypeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
           </form>
         </div>
       }
@@ -123,7 +172,7 @@ const Popup = () => {
           results.map((result, index) => {
             return (
               <div className="box" key={index}>
-                <p><a href={result.doc_url} target="_blank">{result.doc_name}</a></p>
+                <p><a onClick={handleAnchorClick} href={result.doc_url}>{result.doc_name}</a></p>
                 <p><strong>Last Updated</strong>: {new Date(result.doc_last_updated).toLocaleString()}</p>
                 <p dangerouslySetInnerHTML={{ __html: sanitizeHtml(result.text) }} />
               </div>
