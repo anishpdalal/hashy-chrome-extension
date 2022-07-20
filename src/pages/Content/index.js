@@ -3,9 +3,11 @@ chrome.runtime.onMessage.addListener(
     if (request.message === "title") {
       if (window.location.href.includes("/agent/tickets")) {
         const message = document.querySelectorAll('[data-garden-id="forms.input"]')[0].value;
-        sendResponse({ message: message });
+        const components = window.location.href.split("/");
+        const ticketId = components[components.length - 1];
+        sendResponse({ message: message, ticketId: ticketId });
       } else {
-        sendResponse({ message: null });
+        sendResponse({ message: null, ticketId: null });
       }
     }
   }

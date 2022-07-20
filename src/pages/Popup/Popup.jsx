@@ -21,12 +21,15 @@ async function isUserLoggedIn() {
   return responseJson.is_active;
 }
 
-async function getSearchResults(query, doc_type = null) {
+async function getSearchResults(query, doc_type = null, ticketId = null) {
   let queryStr;
   if (doc_type && doc_type !== "all") {
     queryStr = `query=${query}&doc_type=${doc_type}`
   } else {
     queryStr = `query=${query}`
+  }
+  if (ticketId) {
+    queryStr = `${queryStr}&log_id=${ticketId}`
   }
   const response = await fetch(`${secrets.apiHost}/v0/search?${queryStr}`, { credentials: 'include' })
   const responseJson = await response.json();
@@ -50,11 +53,12 @@ const Popup = () => {
   const [answer, setAnswer] = useState(null);
   const [loading, setLoading] = useState(false);
   const [docType, setDocType] = useState("all");
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(null);
+  const [ticketId, setTicketId] = useState(null);
   useEffect(() => {
     if (title) {
       setLoading(true);
-      getSearchResults(title)
+      getSearchResults(title, docType, ticketId)
         .then(response => {
           setLoading(false);
           setResults(response.results);
@@ -68,7 +72,7 @@ const Popup = () => {
   const handleSubmit = event => {
     event.preventDefault();
     setLoading(true);
-    getSearchResults(query, docType)
+    getSearchResults(query, docType, ticketId)
       .then(response => {
         setLoading(false);
         setResults(response.results);
@@ -95,6 +99,7 @@ const Popup = () => {
         { message: 'title' },
         (response) => {
           if (response.message !== null) {
+            setTicketId(response.ticketId);
             setTitle(response.message);
           }
         });
