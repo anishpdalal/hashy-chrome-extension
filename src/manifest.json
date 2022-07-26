@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Hashy",
   "description": "Search your company's knowledge while working with your most important tools.",
-  "version": "0.0.0.4",
+  "version": "0.0.0.5",
   "action": {
     "default_popup": "popup.html",
     "default_icon": "hashy-128.png"
@@ -24,7 +24,8 @@
     }
   ],
   "host_permissions": [
-    "https://api.nlp-labs.com/"
+    "https://api.nlp-labs.com/",
+    "https://dev-api.nlp-labs.com/"
   ],
   "web_accessible_resources": [
     {

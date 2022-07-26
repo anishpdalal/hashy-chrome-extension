@@ -122,13 +122,42 @@ const Popup = () => {
     );
   };
 
+  const handleLoginClick = event => {
+    event.preventDefault();
+    var w = 400;
+    var h = 600;
+    var left = (screen.width / 2) - (w / 2);
+    var top = (screen.height / 2) - (h / 2);
+    chrome.windows.create({ 'url': event.currentTarget.href, 'type': 'popup', 'width': w, 'height': h, 'left': left, 'top': top }, function (window) { });
+  };
+
+  async function handleLogoutClick(event) {
+    event.preventDefault();
+    await fetch(event.currentTarget.href,
+      {
+        credentials: "include",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      }
+    );
+    window.close();
+  }
+
   return (
     <div className="App">
       <h1>Hashy</h1>
       {(googleAuthLink && !loggedIn) &&
         <a href={googleAuthLink}
-          target="_blank">
+          onClick={handleLoginClick}>
           Login with Google
+        </a>
+      }
+      {loggedIn &&
+        <a href={`${secrets.apiHost}/v0/auth/cookie/logout`}
+          onClick={handleLogoutClick}>
+          Logout
         </a>
       }
       {loggedIn &&
