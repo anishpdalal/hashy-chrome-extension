@@ -21,6 +21,28 @@ async function isUserLoggedIn() {
   return responseJson.is_active;
 }
 
+const DOC_TYPE_MAPPING = {
+  "zendesk_integration": [
+    { label: "Zendesk Help Center Article", value: "zendesk_hc_article_body" },
+    { label: "Zendesk Ticket", value: "zendesk_ticket" },
+    { label: "Zendesk Ticket Comment", value: "zendesk_ticket_comment" },
+  ],
+  "hubspot_integration": [
+    { label: "HubSpot Help Center Article", value: "hubspot_hc_article_body" },
+  ]
+};
+
+async function getDocTypeOptions() {
+  const response = await fetch(`${secrets.apiHost}/v0/sources`, { credentials: 'include' })
+  if (response.status !== 200) {
+    return [{ label: "All", value: "all" }];
+  }
+  const responseJson = await response.json();
+  let options = [{ label: "All", value: "all" }];
+  responseJson.forEach(x => options.push(...DOC_TYPE_MAPPING[x.name]));
+  return options;
+}
+
 async function getSearchResults(query, doc_type = null, ticketId = null) {
   let queryStr;
   if (doc_type && doc_type !== "all") {
@@ -38,13 +60,6 @@ async function getSearchResults(query, doc_type = null, ticketId = null) {
 
 const Popup = () => {
 
-  const docTypeOptions = [
-    { label: "All", value: "all" },
-    { label: "Help Center Article", value: "zendesk_hc_article_body" },
-    { label: "Ticket", value: "zendesk_ticket" },
-    { label: "Ticket Comment", value: "zendesk_ticket_comment" },
-  ];
-
   const [googleAuthLink, setGoogleAuthLink] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
   const [query, setQuery] = useState("");
@@ -53,6 +68,7 @@ const Popup = () => {
   const [answer, setAnswer] = useState(null);
   const [loading, setLoading] = useState(false);
   const [docType, setDocType] = useState("all");
+  const [docTypeOptions, setDocTypeOptions] = useState([{ label: "All", value: "all" }]);
   const [title, setTitle] = useState(null);
   const [ticketId, setTicketId] = useState(null);
   useEffect(() => {
@@ -89,6 +105,10 @@ const Popup = () => {
     isUserLoggedIn()
       .then(status => {
         setLoggedIn(status);
+      })
+    getDocTypeOptions()
+      .then(options => {
+        setDocTypeOptions(options);
       })
     chrome.tabs && chrome.tabs.query({
       active: true,

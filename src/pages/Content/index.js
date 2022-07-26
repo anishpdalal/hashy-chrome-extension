@@ -6,6 +6,11 @@ chrome.runtime.onMessage.addListener(
         const components = window.location.href.split("/");
         const ticketId = components[components.length - 1];
         sendResponse({ message: message, ticketId: ticketId });
+      } else if (window.location.href.includes("hubspot.com/contacts")) {
+        const message = document.querySelectorAll('[data-selenium-test="highlightTitle"]')[0].textContent;
+        const components = window.location.href.split("/");
+        const ticketId = components[components.length - 1];
+        sendResponse({ message: message, ticketId: ticketId });
       } else {
         sendResponse({ message: null, ticketId: null });
       }

@@ -2,24 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { goBack } from 'react-chrome-extension-router';
 import secrets from 'secrets';
 
-async function getZendeskSource() {
-  const response = await fetch(`${secrets.apiHost}/v0/sources/zendesk`, { credentials: 'include' });
+async function getSources() {
+  const response = await fetch(`${secrets.apiHost}/v0/sources/me`, { credentials: 'include' });
   const responseJson = await response.json();
-  return responseJson
+  return responseJson.map((x) => x.name);
 }
 
+const DOC_TYPE_MAPPING = {
+  "zendesk_integration": { label: "Generate Zendesk Report", url: `${secrets.apiHost}/v0/sources/zendesk/analytics` },
+  "hubspot_integration": { label: "Generate HubSpot Report", url: `${secrets.apiHost}/v0/sources/hubspot/analytics` },
+};
+
 const Analytics = () => {
-  const [sourceId, setSourceId] = React.useState("");
+  const [sources, setSources] = useState([]);
   useEffect(() => {
-    getZendeskSource()
+    getSources()
       .then(response => {
-        setSourceId(response.id);
+        setSources(response);
       })
   }, []);
 
   const handleSubmit = event => {
     event.preventDefault();
-    fetch(`${secrets.apiHost}/v0/sources/zendesk/analytics`, {
+    fetch(DOC_TYPE_MAPPING[event.currentTarget.id].url, {
       credentials: "include",
       method: "GET"
     })
@@ -41,10 +46,17 @@ const Analytics = () => {
     <div className="App">
       <button onClick={() => goBack()}>Back</button>
       <h1>Analytics</h1>
-      {sourceId &&
-        <form onSubmit={handleSubmit}>
-          <button type="submit">Generate Zendesk Report</button>
-        </form>
+      {sources &&
+        sources.map((source, index) => {
+          return (
+            <div>
+              <form id={source} onSubmit={handleSubmit}>
+                <button type="submit">{DOC_TYPE_MAPPING[source].label}</button>
+              </form>
+              <br />
+            </div>
+          );
+        })
       }
     </div>
   );
