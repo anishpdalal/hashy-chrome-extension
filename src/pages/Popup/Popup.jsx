@@ -58,6 +58,18 @@ async function getSearchResults(query, doc_type = null, ticketId = null) {
   return responseJson;
 }
 
+async function getZendeskTicketSubject(ticketId) {
+  const response = await fetch(`${secrets.apiHost}/v0/sources/zendesk/tickets/${ticketId}`, { credentials: 'include' })
+  const responseJson = await response.json();
+  return responseJson
+}
+
+async function getHubSpotTicketSubject(ticketId) {
+  const response = await fetch(`${secrets.apiHost}/v0/sources/hubspot/tickets/${ticketId}`, { credentials: 'include' })
+  const responseJson = await response.json();
+  return responseJson
+}
+
 const Popup = () => {
 
   const [googleAuthLink, setGoogleAuthLink] = useState("");
@@ -114,15 +126,23 @@ const Popup = () => {
       active: true,
       currentWindow: true
     }, tabs => {
-      chrome.tabs.sendMessage(
-        tabs[0].id || 0,
-        { message: 'title' },
-        (response) => {
-          if (response.message !== null) {
-            setTicketId(response.ticketId);
-            setTitle(response.message);
-          }
-        });
+      const url = tabs[0].url;
+      let ticket_id;
+      if (url.includes("zendesk.com/agent/tickets")) {
+        ticket_id = url.split("/")[url.split("/").length - 1];
+        getZendeskTicketSubject(ticket_id)
+          .then(response => {
+            setTicketId(ticket_id);
+            setTitle(response.ticket_subject);
+          })
+      } else if (/hubspot\.com\/contacts\/\d+\/ticket\/\d+/.test(url)) {
+        ticket_id = url.split("/")[url.split("/").length - 1];
+        getHubSpotTicketSubject(ticket_id)
+          .then(response => {
+            setTicketId(ticket_id);
+            setTitle(response.ticket_subject);
+          })
+      } else { };
     });
 
   }, []);

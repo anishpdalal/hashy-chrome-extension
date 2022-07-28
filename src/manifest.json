@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Hashy",
   "description": "Search your company's knowledge while working with your most important tools.",
-  "version": "0.0.0.5",
+  "version": "0.0.0.6",
   "action": {
     "default_popup": "popup.html",
     "default_icon": "hashy-128.png"
@@ -10,19 +10,8 @@
   "icons": {
     "128": "hashy-128.png"
   },
-  "content_scripts": [
-    {
-      "matches": [
-        "https://*.zendesk.com/agent/tickets/*",
-        "https://*.hubspot.com/contacts/*/ticket/*"
-      ],
-      "js": [
-        "contentScript.bundle.js"
-      ],
-      "css": [
-        "content.styles.css"
-      ]
-    }
+  "permissions": [
+    "activeTab"
   ],
   "host_permissions": [
     "https://api.nlp-labs.com/"
