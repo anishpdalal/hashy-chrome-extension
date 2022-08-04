@@ -29,6 +29,7 @@ const DOC_TYPE_MAPPING = {
   ],
   "hubspot_integration": [
     { label: "HubSpot Help Center Article", value: "hubspot_hc_article_body" },
+    { label: "HubSpot Ticket", value: "hubspot_ticket" },
   ]
 };
 
